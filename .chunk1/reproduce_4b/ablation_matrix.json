@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "suite_id": "rethinking-opd-formal-ablations-v1",
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "arxiv": "2604.13016v2",
+    "local_pdf": "{repo}/paper/rethinking_opd.pdf"
+  },
+  "protocols": {
+    "smoke": {
+      "preset": "smoke",
+      "purpose": "Two-step branch and tensor-shape validation; no scientific trend claim.",
+      "overrides": {
+        "SAVE_FREQ": "-1",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1"
+      }
+    },
+    "calibration": {
+      "preset": "pilot",
+      "purpose": "Ten-step throughput, memory, and finite-metric calibration before a formal pilot.",
+      "overrides": {
+        "TOTAL_TRAINING_STEPS": "10",
+        "TRAIN_MAX_SAMPLES": "80",
+        "SAVE_FREQ": "-1",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1"
+      }
+    },
+    "pilot": {
+      "preset": "pilot",
+      "purpose": "Hardware-adapted 200-step mechanism ablation on two A100s.",
+      "overrides": {
+        "TOTAL_TRAINING_STEPS": "200",
+        "TRAIN_MAX_SAMPLES": "1600",
+        "SAVE_FREQ": "200",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1"
+      }
+    },
+    "paper": {
+      "preset": "paper",
+      "purpose": "One paper-default epoch; multi-day and not yet validated on two A100s.",
+      "dangerous": true,
+      "overrides": {
+        "SAVE_FREQ": "20",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "2"
+      }
+    }
+  },
+  "datasets": {
+    "dapo_original": {
+      "path": "{repo}/datasets/dapo-math-17k.parquet",
+      "rows": 17917,
+      "sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "template": "original_dapo"
+    },
+    "dapo_released_processed": {
+      "path": "{repo}/datasets/dapo-math-17k-processed.parquet",
+      "rows": 17917,
+      "sha256": "500bd8c45eca355b98f9ba6f3213194a72bd42c73c5e9569c6fbbb1b51bd0b39",
+      "template": "released_literal_boxed_double_braces"
+    },
+    "dapo_paper_aligned": {
+      "path": "{repo}/datasets/ablation/dapo-math-17k-paper-aligned.parquet",
+      "rows": 17917,
+      "sha256": "4c2cb411d605d95d56df73824e394ca69fc422592d8bb5fd63e82303b530a257",
+      "template": "paper_literal_boxed_single_braces"
+    },
+    "dapo_paper_aligned_matched": {
+      "path": "{repo}/datasets/ablation/dapo-paper-aligned-matched-deepmath-14116-seed42.parquet",
+      "rows": 14116,
+      "sha256": "5ab8b45b7c24c4254c22ae0afe82e1c00792c41e01e508636ea49a159837cf21",
+      "template": "paper_literal_boxed_single_braces",
+      "disclosure": "Deterministic local subset because the paper does not publish matched DAPO row IDs or seed."
+    },
+    "deepmath_deduped": {
+      "path": "{repo}/datasets/DeepMath_deduped.parquet",
+      "rows": 14116,
+      "sha256": "e79d42456e1f8059167100b8fb5d25fbe48cce978bba185bddfb03b40a2925d4",
+      "template": "paper_literal_boxed_single_braces"
+    },
+    "openthoughts3_opd": {
+      "path": "{repo}/datasets/OpenThoughts3_opd.parquet",
+      "rows": 30000,
+      "sha256": "20cb0121463dbacf996f858a96f584d714cb939ab31028b8e33e5b5b2010e0ae",
+      "template": "paper_literal_boxed_single_braces"
+    }
+  },
+  "groups": [
+    {
+      "id": "fig2_teacher_pattern",
+      "paper_location": "Figure 2, physical page 6",
+      "fidelity": "paper_exact_models_hardware_adapted",
+      "question": "Does a thinking-pattern-compatible RL teacher outperform a stronger Non-thinking teacher?",
+      "factor_keys": ["MODEL_PAIR"],
+      "constants": {
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig2-compatible-grpo", "label": "Qwen GRPO teacher", "factors": {"MODEL_PAIR": "paper"}},
+        {"id": "fig2-mismatch-nonthinking", "label": "Qwen Non-thinking teacher", "factors": {"MODEL_PAIR": "mismatch"}}
+      ]
+    },
+    {
+      "id": "fig6_success_failure",
+      "paper_location": "Figure 6, physical page 9",
+      "fidelity": "paper_models_with_public_author_checkpoint_proxy",
+      "question": "Do successful and failing OPD runs exhibit different online alignment dynamics?",
+      "factor_keys": ["MODEL_PAIR"],
+      "constants": {
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig6-success-justrl", "label": "JustRL-1.5B teacher", "factors": {"MODEL_PAIR": "r1_success"}},
+        {"id": "fig6-failure-r1-7b", "label": "R1-Distill-7B teacher", "factors": {"MODEL_PAIR": "r1_failure"}}
+      ],
+      "disclosure": "Uses the accessible hbx/JustRL-DeepSeek-1.5B revision; byte identity with the gated thunlp mirror is unverified."
+    },
+    {
+      "id": "fig7_support",
+      "paper_location": "Figure 7, physical page 10",
+      "fidelity": "paper_models_and_author_code_semantics_hardware_adapted",
+      "question": "Which Top-k token support drives OPD?",
+      "factor_keys": ["TOP_K_STRATEGY"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig7-student-topk", "label": "Student Top-16", "factors": {"TOP_K_STRATEGY": "only_stu"}},
+        {"id": "fig7-overlap-topk", "label": "Overlap Top-16", "factors": {"TOP_K_STRATEGY": "intersection"}},
+        {"id": "fig7-nonoverlap-topk-author", "label": "Non-Overlap Top-16 (author raw mass)", "factors": {"TOP_K_STRATEGY": "union-intersection"}}
+      ]
+    },
+    {
+      "id": "fig7_normalization_robustness",
+      "paper_location": "Figure 7 implementation robustness extension",
+      "fidelity": "local_extension",
+      "disabled_by_default": true,
+      "question": "Is the Non-Overlap result caused by token coverage or its small raw probability mass?",
+      "factor_keys": ["SUPPORT_WEIGHT_NORMALIZATION"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "union-intersection"
+      },
+      "cells": [
+        {"id": "fig7-nonoverlap-author", "label": "Author raw probability mass", "factors": {"SUPPORT_WEIGHT_NORMALIZATION": "author"}},
+        {"id": "fig7-nonoverlap-selected", "label": "Selected-support renormalized", "factors": {"SUPPORT_WEIGHT_NORMALIZATION": "selected"}}
+      ]
+    },
+    {
+      "id": "fig8_cold_start",
+      "paper_location": "Figure 8, physical page 12",
+      "fidelity": "released_checkpoint_comparison",
+      "question": "Does teacher-rollout SFT cold start recover otherwise failing OPD?",
+      "factor_keys": ["STUDENT_MODEL", "STUDENT_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "mismatch",
+        "TRAIN_DATA": "{repo}/datasets/OpenThoughts3_opd.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {
+          "id": "fig8-base-only-opd",
+          "label": "Qwen3-1.7B-Base + OPD",
+          "factors": {
+            "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+            "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+          }
+        },
+        {
+          "id": "fig8-sft-then-opd",
+          "label": "Released Qwen3-1.7B-SFT + OPD",
+          "factors": {
+            "STUDENT_MODEL": "lllyx/Qwen3-1.7B-SFT",
+            "STUDENT_REVISION": "f0065babe7440257d7db331a5aa442ef7c3cf266"
+          }
+        }
+      ],
+      "disclosure": "Uses the released SFT checkpoint; the paper, model card, and repository SFT YAML disclose inconsistent SFT hyperparameters."
+    },
+    {
+      "id": "fig9_prompt_template",
+      "paper_location": "Figure 9, physical page 13",
+      "fidelity": "paper_models_strict_text_reconstruction",
+      "question": "Does matching only the teacher's prompt template improve OPD?",
+      "factor_keys": ["TRAIN_DATA"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig9-template-original", "label": "Original DAPO template", "factors": {"TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet"}},
+        {"id": "fig9-template-paper-aligned", "label": "Paper-aligned template", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-math-17k-paper-aligned.parquet"}}
+      ]
+    },
+    {
+      "id": "fig10_prompt_content",
+      "paper_location": "Figure 10, physical page 13",
+      "fidelity": "paper_models_with_disclosed_local_matching_seed",
+      "question": "Do prompts drawn from the teacher's RL data outperform deduplicated in-domain prompts?",
+      "factor_keys": ["TRAIN_DATA"],
+      "constants": {
+        "MODEL_PAIR": "paper",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig10-content-dapo-matched", "label": "Matched DAPO teacher prompts", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-paper-aligned-matched-deepmath-14116-seed42.parquet"}},
+        {"id": "fig10-content-deepmath", "label": "Deduplicated DeepMath", "factors": {"TRAIN_DATA": "{repo}/datasets/DeepMath_deduped.parquet"}}
+      ]
+    },
+    {
+      "id": "fig11_13_response_length",
+      "paper_location": "Figures 11(a), 12, 13 and 23, physical pages 14-15 and 30",
+      "fidelity": "paper_models_hardware_adapted_for_long_context",
+      "question": "Where is the response-length sweet spot and where does suffix instability begin?",
+      "factor_keys": ["MAX_RESPONSE_LENGTH"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {
+        "smoke": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "4",
+          "TOTAL_TRAINING_STEPS": "2",
+          "POSITION_ENTROPY_LOG_FREQ": "1",
+          "POSITION_ENTROPY_START_STEP": "0",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "calibration": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "20",
+          "TOTAL_TRAINING_STEPS": "10",
+          "POSITION_ENTROPY_LOG_FREQ": "1",
+          "POSITION_ENTROPY_START_STEP": "0",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "pilot": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "520",
+          "TOTAL_TRAINING_STEPS": "260",
+          "SAVE_FREQ": "20",
+          "MAX_ACTOR_CKPTS_TO_KEEP": "2",
+          "POSITION_ENTROPY_LOG_FREQ": "10",
+          "POSITION_ENTROPY_START_STEP": "180",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "paper": {
+          "POSITION_ENTROPY_LOG_FREQ": "10",
+          "POSITION_ENTROPY_START_STEP": "180",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        }
+      },
+      "cells": [
+        {"id": "fig12-length-512", "label": "0.5K", "factors": {"MAX_RESPONSE_LENGTH": "512"}},
+        {"id": "fig12-length-1024", "label": "1K", "factors": {"MAX_RESPONSE_LENGTH": "1024"}},
+        {"id": "fig12-length-3072", "label": "3K", "factors": {"MAX_RESPONSE_LENGTH": "3072"}},
+        {"id": "fig12-length-7168", "label": "7K", "factors": {"MAX_RESPONSE_LENGTH": "7168"}},
+        {"id": "fig12-length-10240", "label": "10K", "factors": {"MAX_RESPONSE_LENGTH": "10240"}},
+        {"id": "fig12-length-15360", "label": "15K", "factors": {"MAX_RESPONSE_LENGTH": "15360"}}
+      ],
+      "disclosure": "The text says 200 steps while figures extend to about 250-260; the local pilot records through step 260 and marks step 200 separately."
+    },
+    {
+      "id": "fig15_16_topk",
+      "paper_location": "Figures 15-16, physical page 17",
+      "fidelity": "paper_models_hardware_adapted",
+      "question": "How does the Student Top-k support size affect performance and stability?",
+      "factor_keys": ["TOP_K"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig16-topk-sampled", "label": "Sampled-token", "factors": {"TOP_K": "0"}},
+        {"id": "fig16-topk-1", "label": "Top-1", "factors": {"TOP_K": "1"}},
+        {"id": "fig16-topk-4", "label": "Top-4", "factors": {"TOP_K": "4"}},
+        {"id": "fig16-topk-16", "label": "Top-16", "factors": {"TOP_K": "16"}},
+        {"id": "fig16-topk-64", "label": "Top-64", "factors": {"TOP_K": "64"}}
+      ]
+    },
+    {
+      "id": "local_4b_scale_transfer",
+      "paper_location": "Local extension; not a paper ablation",
+      "fidelity": "local_extension",
+      "disabled_by_default": true,
+      "allowed_protocols": ["smoke"],
+      "question": "Does the same OPD mechanism remain finite when the student is scaled from 1.7B to 4B?",
+      "factor_keys": ["MODEL_PAIR"],
+      "constants": {
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "local-scale-student-1p7b", "label": "1.7B student", "factors": {"MODEL_PAIR": "paper"}},
+        {"id": "local-scale-student-4b", "label": "4B student", "factors": {"MODEL_PAIR": "4b"}}
+      ],
+      "disclosure": "The 4B smoke already reserved 71.38 GiB per card; pilot/paper execution is intentionally unsupported without new memory calibration."
+    }
+  ]
+}

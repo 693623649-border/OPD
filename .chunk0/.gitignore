@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local reproduction environments, caches, models, and run artifacts.
+.venv-opd/
+.venv-sft/
+.venv/
+.cache/
+models/
+artifacts/
+checkpoints/
+checkpoint/
+logs/
+validation_log/
+outputs/
+*.egg-info/
+
+# W&B local logs (uploaded to cloud, not needed in repo)
+wandb/
+
+# Paper PDF (large binary, keep summary only)
+rethink.pdf

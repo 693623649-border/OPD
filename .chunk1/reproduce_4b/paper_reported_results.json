@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "arxiv": "2604.13016v2",
+    "local_pdf": "{repo}/paper/rethinking_opd.pdf"
+  },
+  "evidence_policy": "Only values printed in the paper text, labels, tables, or directly readable bars are transcribed. Curves are not digitized and approximate prose is explicitly labelled approximate/qualitative.",
+  "entries": [
+    {
+      "id": "figure-03",
+      "physical_page": 6,
+      "kind": "teacher_avg_at_16",
+      "evidence": "exact_printed",
+      "values": {
+        "Qwen3-4B-Non-thinking": {"AIME24": 0.212, "AIME25": 0.210, "AMC23": 0.700},
+        "Qwen3-4B-Base-GRPO": {"AIME24": 0.204, "AIME25": 0.242, "AMC23": 0.599}
+      },
+      "derived_unweighted_macro": {
+        "Qwen3-4B-Non-thinking": 0.374,
+        "Qwen3-4B-Base-GRPO": 0.34833333333333333
+      }
+    },
+    {
+      "id": "figure-04",
+      "physical_page": 7,
+      "kind": "initial_overlap_and_gap_recovery",
+      "evidence": "exact_printed",
+      "values": [
+        {"family": "DeepSeek", "teacher": "R1-Distill-7B", "initial_overlap": 0.747, "gap_recovery": 0.053},
+        {"family": "DeepSeek", "teacher": "Skywork-OR1-Math-7B", "initial_overlap": 0.715, "gap_recovery": 0.169},
+        {"family": "Qwen", "teacher": "Qwen3-4B-Non-thinking", "initial_overlap": 0.757, "gap_recovery": 0.156},
+        {"family": "Qwen", "teacher": "Qwen3-4B-Non-Thinking-RL-Math", "initial_overlap": 0.703, "gap_recovery": 0.586}
+      ]
+    },
+    {
+      "id": "figure-07",
+      "physical_page": 10,
+      "kind": "support_ablation_overlap_curve",
+      "evidence": "approximate_from_figure_and_text",
+      "values": {"initial_overlap_approx": 0.72, "student_and_overlap_top16_final_overlap_lower_bound": 0.91}
+    },
+    {
+      "id": "figure-11b",
+      "physical_page": 14,
+      "kind": "teacher_continuation_accuracy_gain",
+      "evidence": "exact_printed",
+      "values": {"1024": 0.3659, "4096": 0.2709, "8192": 0.1522, "16384": 0.0237}
+    },
+    {
+      "id": "figure-14",
+      "physical_page": 16,
+      "kind": "sequence_mean_reward_auroc",
+      "evidence": "exact_printed",
+      "counts": {"correct": 2828, "incorrect": 1451},
+      "values": {"JustRL-DeepSeek-1.5B": 0.7333, "R1-Distill-7B": 0.7511}
+    },
+    {
+      "id": "figure-15",
+      "physical_page": 17,
+      "kind": "topk_final_avg_at_16",
+      "evidence": "exact_readable_bars",
+      "values": {
+        "sampled": {"AIME24": 0.454, "AIME25": 0.327, "AMC23": 0.782},
+        "top1": {"AIME24": 0.446, "AIME25": 0.310, "AMC23": 0.772},
+        "top4": {"AIME24": 0.473, "AIME25": 0.331, "AMC23": 0.793},
+        "top16": {"AIME24": 0.458, "AIME25": 0.338, "AMC23": 0.791},
+        "top64": {"AIME24": 0.463, "AIME25": 0.338, "AMC23": 0.785}
+      }
+    },
+    {
+      "id": "figure-18",
+      "physical_page": 24,
+      "kind": "overlap_probability_mass",
+      "evidence": "qualitative_range_reported",
+      "values": {"lower_bound": 0.97, "upper_bound": 0.99}
+    },
+    {
+      "id": "table-01",
+      "physical_page": 23,
+      "kind": "grpo_teacher_training_contract",
+      "evidence": "exact_table",
+      "values": {
+        "epochs": 1,
+        "global_batch_size": 64,
+        "mini_batch_size": 64,
+        "rollout_n": 8,
+        "max_prompt_tokens": 1024,
+        "max_response_tokens": 7168,
+        "validation_max_response_tokens": 31744,
+        "learning_rate": 0.000001,
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "repetition_penalty": 1.0,
+        "kl_coefficient": 0.0,
+        "loss_aggregation": "token-mean",
+        "hardware": "8xA800-80GB"
+      }
+    },
+    {
+      "id": "table-02",
+      "physical_page": 24,
+      "kind": "opd_training_contract",
+      "evidence": "exact_table",
+      "values": {
+        "epochs": 1,
+        "global_batch_size": 64,
+        "mini_batch_size": 64,
+        "rollout_n": 4,
+        "top_k": 16,
+        "top_k_strategy": "student",
+        "max_prompt_tokens": 1024,
+        "max_response_tokens": 7168,
+        "learning_rate": 0.000001,
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "repetition_penalty": 1.0,
+        "kl_coefficient": 0.0,
+        "loss_aggregation": "token-mean",
+        "hardware": "8xA800-80GB"
+      }
+    },
+    {
+      "id": "table-03",
+      "physical_page": 28,
+      "kind": "cold_start_sft_contract",
+      "evidence": "exact_table_with_undisclosed_fields_omitted",
+      "values": {
+        "rollout_temperature": 0.7,
+        "rollout_top_p": 0.95,
+        "rollout_top_k": -1,
+        "rollout_max_tokens": 12288,
+        "rollouts_per_prompt": 1,
+        "sft_epochs": 1,
+        "sft_sequence_length": 14336,
+        "sft_per_device_batch_size": 8,
+        "sft_gradient_accumulation_steps": 1,
+        "sft_learning_rate": 0.00001,
+        "sft_scheduler": "cosine",
+        "sft_warmup_ratio": 0.05,
+        "sft_precision": "BF16"
+      }
+    }
+  ]
+}

@@ -1,0 +1,485 @@
+{
+  "schema_version": 1,
+  "suite_id": "rethinking-opd-complete-paper-v3",
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "arxiv": "2604.13016v2",
+    "local_pdf": "{repo}/paper/rethinking_opd.pdf",
+    "scope": "Thirty-one registered figure/table roles, spanning twenty-nine full training environments and twenty-eight distinct scientific conditions, underlie Figures 2, 4-13, and 15-23; non-training producers are tracked in paper_experiment_ledger.json."
+  },
+  "protocols": {
+    "smoke": {
+      "preset": "smoke",
+      "purpose": "Two-step execution and tensor-shape validation on 2xA100; not scientific evidence.",
+      "overrides": {
+        "SAVE_FREQ": "-1",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1"
+      }
+    },
+    "calibration": {
+      "preset": "pilot",
+      "purpose": "Ten-step memory, throughput, and finite-metric calibration on 2xA100.",
+      "overrides": {
+        "TOTAL_TRAINING_STEPS": "10",
+        "TRAIN_MAX_SAMPLES": "80",
+        "SAVE_FREQ": "-1",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1"
+      }
+    },
+    "pilot": {
+      "preset": "pilot",
+      "purpose": "Hardware-adapted 200-step trend run on 2xA100.",
+      "overrides": {
+        "TOTAL_TRAINING_STEPS": "200",
+        "TRAIN_MAX_SAMPLES": "1600",
+        "SAVE_FREQ": "20",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "2"
+      }
+    },
+    "paper": {
+      "preset": "paper",
+      "purpose": "Paper-disclosed optimization defaults; core cells remain a 2xA100 hardware adaptation, while groups that require original-scale hardware state N_GPUS explicitly.",
+      "dangerous": true,
+      "overrides": {
+        "SAVE_FREQ": "20",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "0",
+        "CHECKPOINT_SAVE_MODE": "model_only"
+      }
+    }
+  },
+  "datasets": {
+    "dapo_original": {
+      "path": "{repo}/datasets/dapo-math-17k.parquet",
+      "rows": 17917,
+      "sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "template": "original_dapo"
+    },
+    "dapo_paper_aligned": {
+      "path": "{repo}/datasets/ablation/dapo-math-17k-paper-aligned.parquet",
+      "rows": 17917,
+      "sha256": "4c2cb411d605d95d56df73824e394ca69fc422592d8bb5fd63e82303b530a257",
+      "template": "paper_literal_boxed_single_braces"
+    },
+    "dapo_paper_aligned_matched": {
+      "path": "{repo}/datasets/ablation/dapo-paper-aligned-matched-deepmath-14116-seed42.parquet",
+      "rows": 14116,
+      "sha256": "5ab8b45b7c24c4254c22ae0afe82e1c00792c41e01e508636ea49a159837cf21",
+      "template": "paper_literal_boxed_single_braces",
+      "disclosure": "Deterministic seed-42 local subset because the paper does not publish the matched DAPO row IDs or seed."
+    },
+    "deepmath_deduped": {
+      "path": "{repo}/datasets/DeepMath_deduped.parquet",
+      "rows": 14116,
+      "sha256": "e79d42456e1f8059167100b8fb5d25fbe48cce978bba185bddfb03b40a2925d4",
+      "template": "paper_literal_boxed_single_braces"
+    },
+    "openthoughts3_opd": {
+      "path": "{repo}/datasets/OpenThoughts3_opd.parquet",
+      "rows": 30000,
+      "sha256": "20cb0121463dbacf996f858a96f584d714cb939ab31028b8e33e5b5b2010e0ae",
+      "template": "paper_literal_boxed_single_braces"
+    }
+  },
+  "groups": [
+    {
+      "id": "fig2_teacher_pattern",
+      "paper_location": "Figure 2 and Figure 17, physical pages 6 and 23",
+      "fidelity": "paper_exact_public_models_hardware_adapted",
+      "question": "Does thinking-pattern compatibility, represented by the teacher condition, govern OPD?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION", "ENABLE_THINKING"],
+      "constants": {
+        "MODEL_PAIR": "paper",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+        "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {
+          "id": "fig2-compatible-grpo",
+          "label": "Qwen3-4B-Base-GRPO teacher, thinking/base prompt mode",
+          "factors": {
+            "TEACHER_MODEL": "lllyx/Qwen3-4B-Base-GRPO",
+            "TEACHER_REVISION": "1f3b2966edfb75f2f98a00617588c1f748088422",
+            "ENABLE_THINKING": "auto"
+          }
+        },
+        {
+          "id": "fig2-mismatch-nonthinking",
+          "label": "Qwen3-4B Non-thinking teacher, non-thinking chat mode",
+          "factors": {
+            "TEACHER_MODEL": "Qwen/Qwen3-4B",
+            "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c",
+            "ENABLE_THINKING": "false"
+          }
+        }
+      ],
+      "disclosure": "ENABLE_THINKING=false is required by the author repository for Qwen3 Non-thinking models and is part of the teacher condition, not an independent prompt ablation."
+    },
+    {
+      "id": "fig4_6_deepseek_teachers",
+      "paper_location": "Figures 4, 6, 14, 18, and 19, physical pages 7, 9, 16, 24, and 25",
+      "fidelity": "paper_public_models_with_author_checkpoint_mirror",
+      "question": "For one R1-Distill-1.5B student, how does teacher identity and additional RL affect transfer and alignment?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "MIN_FREE_GIB": "72"
+      },
+      "cells": [
+        {
+          "id": "fig4-deepseek-skywork-rl",
+          "label": "Skywork-OR1-Math-7B additional-RL teacher",
+          "factors": {
+            "TEACHER_MODEL": "Skywork/Skywork-OR1-Math-7B",
+            "TEACHER_REVISION": "fcef970f1d10682f13c182b280146a194ed57d1e"
+          }
+        },
+        {
+          "id": "fig4-6-deepseek-r1-7b",
+          "label": "R1-Distill-7B same-pipeline teacher (reused by Figures 4 and 6)",
+          "factors": {
+            "TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "TEACHER_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60"
+          }
+        },
+        {
+          "id": "fig6-deepseek-justrl-success",
+          "label": "JustRL-DeepSeek-1.5B successful teacher",
+          "factors": {
+            "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+            "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2"
+          }
+        }
+      ],
+      "disclosure": "The public hbx revision is the accessible author mirror used locally; byte identity with gated thunlp/JustRL-DeepSeek-1.5B revision 15033913f221cd7fe4c5d83c3c9994bb2172d08c is not independently verified. The R1-7B failure run is intentionally stored once and reused by Figures 4 and 6 through the ledger."
+    },
+    {
+      "id": "fig4_qwen_new_knowledge",
+      "paper_location": "Figure 4, physical page 7",
+      "fidelity": "paper_exact_identity_missing_author_rl_checkpoint",
+      "disabled_by_default": true,
+      "question": "Does additional RL knowledge improve OPD within the Qwen Non-thinking family?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "mismatch",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B",
+        "STUDENT_REVISION": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "ENABLE_THINKING": "false",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {
+          "id": "fig4-qwen-nonthinking",
+          "label": "Qwen3-4B Non-thinking teacher",
+          "factors": {
+            "TEACHER_MODEL": "Qwen/Qwen3-4B",
+            "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c"
+          }
+        },
+        {
+          "id": "fig4-qwen-nonthinking-rl-math",
+          "label": "Paper Qwen3-4B-Non-Thinking-RL-Math teacher (author checkpoint required)",
+          "factors": {
+            "TEACHER_MODEL": "UNPUBLISHED/Qwen3-4B-Non-Thinking-RL-Math",
+            "TEACHER_REVISION": "UNPUBLISHED_BY_AUTHORS"
+          }
+        }
+      ],
+      "disclosure": "The paper identifies the exact RL-Math condition (Qwen3-4B Non-thinking trained with RL on a 57K DeepMath subset) but does not publish its checkpoint or revision. Search results from unrelated third-party checkpoints are not substituted. Replace the sentinel model and revision with an author-supplied checkpoint before enabling this group."
+    },
+    {
+      "id": "fig5_reverse_distillation",
+      "paper_location": "Figure 5, physical page 8",
+      "fidelity": "paper_models_and_600_step_budget_with_author_checkpoint_mirror",
+      "question": "Do 1.5B and 7B pre-RL teachers drive the RL-trained JustRL student to the same regressed state?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "STUDENT_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "MIN_FREE_GIB": "72"
+      },
+      "protocol_overrides": {
+        "paper": {
+          "TOTAL_TRAINING_STEPS": "600",
+          "TRAIN_MAX_SAMPLES": "-1",
+          "SAVE_FREQ": "20",
+          "MAX_ACTOR_CKPTS_TO_KEEP": "0"
+        }
+      },
+      "cells": [
+        {
+          "id": "fig5-reverse-r1-1p5b",
+          "label": "JustRL-1.5B student to its R1-Distill-1.5B pre-RL checkpoint, 600 steps",
+          "factors": {
+            "TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+            "TEACHER_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562"
+          }
+        },
+        {
+          "id": "fig5-reverse-r1-7b",
+          "label": "JustRL-1.5B student to R1-Distill-7B, 600 steps",
+          "factors": {
+            "TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "TEACHER_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60"
+          }
+        }
+      ],
+      "disclosure": "Figure 5 extends through training step 600, overriding the otherwise one-epoch OPD default only for the paper protocol. Smoke, calibration, and pilot retain their shorter safety budgets."
+    },
+    {
+      "id": "fig7_support",
+      "paper_location": "Figure 7, physical page 10",
+      "fidelity": "paper_models_and_author_code_semantics_hardware_adapted",
+      "question": "Which Top-16 token support drives OPD?",
+      "factor_keys": ["TOP_K_STRATEGY"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig7-student-topk", "label": "Student Top-16", "factors": {"TOP_K_STRATEGY": "only_stu"}},
+        {"id": "fig7-overlap-topk", "label": "Overlap Top-16", "factors": {"TOP_K_STRATEGY": "intersection"}},
+        {"id": "fig7-nonoverlap-topk-author", "label": "Non-Overlap Top-16, author raw mass", "factors": {"TOP_K_STRATEGY": "union-intersection"}}
+      ]
+    },
+    {
+      "id": "fig8_cold_start",
+      "paper_location": "Figures 8 and 21, physical pages 12 and 28",
+      "fidelity": "released_checkpoint_comparison",
+      "question": "Does teacher-rollout SFT cold start recover otherwise failing OPD?",
+      "factor_keys": ["STUDENT_MODEL", "STUDENT_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "mismatch",
+        "TEACHER_MODEL": "Qwen/Qwen3-4B",
+        "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "ENABLE_THINKING": "false",
+        "TRAIN_DATA": "{repo}/datasets/OpenThoughts3_opd.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {
+          "id": "fig8-base-only-opd",
+          "label": "Qwen3-1.7B-Base plus OPD",
+          "factors": {
+            "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+            "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+          }
+        },
+        {
+          "id": "fig8-sft-then-opd",
+          "label": "Released Qwen3-1.7B-SFT plus OPD",
+          "factors": {
+            "STUDENT_MODEL": "lllyx/Qwen3-1.7B-SFT",
+            "STUDENT_REVISION": "f0065babe7440257d7db331a5aa442ef7c3cf266"
+          }
+        }
+      ],
+      "disclosure": "The released SFT checkpoint is pinned exactly. Rebuilding the 200K-response SFT producer is tracked separately under Table 3 in the ledger."
+    },
+    {
+      "id": "fig9_prompt_template",
+      "paper_location": "Figures 9 and 22, physical pages 13 and 29",
+      "fidelity": "paper_models_strict_text_reconstruction",
+      "question": "Does matching only the teacher prompt template improve OPD?",
+      "factor_keys": ["TRAIN_DATA"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig9-template-original", "label": "Original DAPO template", "factors": {"TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet"}},
+        {"id": "fig9-template-paper-aligned", "label": "Paper teacher-aligned template", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-math-17k-paper-aligned.parquet"}}
+      ]
+    },
+    {
+      "id": "fig10_prompt_content",
+      "paper_location": "Figure 10, physical page 13",
+      "fidelity": "paper_models_with_disclosed_local_matching_seed",
+      "question": "Do prompts from the teacher RL data outperform deduplicated in-domain prompts?",
+      "factor_keys": ["TRAIN_DATA"],
+      "constants": {
+        "MODEL_PAIR": "paper",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+        "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+        "TEACHER_MODEL": "lllyx/Qwen3-4B-Base-GRPO",
+        "TEACHER_REVISION": "1f3b2966edfb75f2f98a00617588c1f748088422",
+        "ENABLE_THINKING": "auto",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig10-content-dapo-matched", "label": "Matched DAPO teacher prompts", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-paper-aligned-matched-deepmath-14116-seed42.parquet"}},
+        {"id": "fig10-content-deepmath", "label": "Deduplicated DeepMath", "factors": {"TRAIN_DATA": "{repo}/datasets/DeepMath_deduped.parquet"}}
+      ],
+      "disclosure": "The paper does not publish matched DAPO row IDs or seed; this registry pins a deterministic seed-42 local match and labels it as reconstructed rather than exact."
+    },
+    {
+      "id": "fig11_13_response_length",
+      "paper_location": "Figures 11(a), 12, 13, and 23, physical pages 14-15 and 30",
+      "fidelity": "paper_models_hardware_adapted_for_long_context",
+      "question": "Where is the response-length sweet spot and where does suffix instability begin?",
+      "factor_keys": ["MAX_RESPONSE_LENGTH"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {
+        "smoke": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "4",
+          "TOTAL_TRAINING_STEPS": "2",
+          "POSITION_ENTROPY_LOG_FREQ": "1",
+          "POSITION_ENTROPY_START_STEP": "0",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "calibration": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "20",
+          "TOTAL_TRAINING_STEPS": "10",
+          "POSITION_ENTROPY_LOG_FREQ": "1",
+          "POSITION_ENTROPY_START_STEP": "0",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "pilot": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "520",
+          "TOTAL_TRAINING_STEPS": "260",
+          "SAVE_FREQ": "20",
+          "POSITION_ENTROPY_LOG_FREQ": "10",
+          "POSITION_ENTROPY_START_STEP": "180",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "paper": {
+          "TOTAL_TRAINING_STEPS": "200",
+          "POSITION_ENTROPY_LOG_FREQ": "10",
+          "POSITION_ENTROPY_START_STEP": "180",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        }
+      },
+      "cells": [
+        {"id": "fig12-length-512", "label": "0.5K", "factors": {"MAX_RESPONSE_LENGTH": "512"}},
+        {"id": "fig12-length-1024", "label": "1K", "factors": {"MAX_RESPONSE_LENGTH": "1024"}},
+        {"id": "fig12-length-3072", "label": "3K", "factors": {"MAX_RESPONSE_LENGTH": "3072"}},
+        {"id": "fig12-length-7168", "label": "7K", "factors": {"MAX_RESPONSE_LENGTH": "7168"}},
+        {"id": "fig12-length-10240", "label": "10K", "factors": {"MAX_RESPONSE_LENGTH": "10240"}},
+        {"id": "fig12-length-15360", "label": "15K", "factors": {"MAX_RESPONSE_LENGTH": "15360"}}
+      ],
+      "disclosure": "Section 6.1 explicitly states 200 training steps. Figures 12, 13, and 23 display diagnostics through roughly step 250-260, an internal inconsistency retained in the ledger; the paper protocol follows the textual 200-step disclosure, while the 2xA100 pilot records to step 260 for diagnostic comparability."
+    },
+    {
+      "id": "fig15_16_topk",
+      "paper_location": "Figures 15 and 16, physical page 17",
+      "fidelity": "paper_models_hardware_adapted",
+      "question": "How does Student Top-k support size affect performance and stability?",
+      "factor_keys": ["TOP_K"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "cells": [
+        {"id": "fig16-topk-sampled", "label": "Sampled-token", "factors": {"TOP_K": "0"}},
+        {"id": "fig16-topk-1", "label": "Top-1", "factors": {"TOP_K": "1"}},
+        {"id": "fig16-topk-4", "label": "Top-4", "factors": {"TOP_K": "4"}},
+        {"id": "fig16-topk-16", "label": "Top-16", "factors": {"TOP_K": "16"}},
+        {"id": "fig16-topk-64", "label": "Top-64", "factors": {"TOP_K": "64"}}
+      ]
+    },
+    {
+      "id": "fig20_cross_model_large",
+      "paper_location": "Figure 20, physical page 27",
+      "fidelity": "paper_exact_public_large_models_requires_original_scale_hardware",
+      "disabled_by_default": true,
+      "allowed_protocols": ["paper"],
+      "question": "Does high-probability-token alignment generalize with a 7B student and 7B/14B teachers?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "r1_failure",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        "STUDENT_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "8",
+        "MIN_FREE_GIB": "70"
+      },
+      "cells": [
+        {
+          "id": "fig20-r1-7b-skywork-7b",
+          "label": "R1-Distill-7B student to Skywork-OR1-Math-7B teacher",
+          "factors": {
+            "TEACHER_MODEL": "Skywork/Skywork-OR1-Math-7B",
+            "TEACHER_REVISION": "fcef970f1d10682f13c182b280146a194ed57d1e"
+          }
+        },
+        {
+          "id": "fig20-r1-7b-r1-14b",
+          "label": "R1-Distill-7B student to R1-Distill-14B teacher",
+          "factors": {
+            "TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+            "TEACHER_REVISION": "1df8507178afcc1bef68cd8c393f61a886323761"
+          }
+        }
+      ],
+      "disclosure": "These are the exact public Figure 20 model identities. The trainable 7B actor plus frozen 7B/14B teacher and paper global batch were run by the authors on 8xA800 80GB. This group is deliberately excluded from the 2xA100 default and only permits the paper protocol with N_GPUS=8; do not reinterpret a smaller-model proxy as Figure 20."
+    }
+  ]
+}

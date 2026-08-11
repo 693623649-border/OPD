@@ -1,0 +1,501 @@
+{
+  "schema_version": 2,
+  "suite_id": "rethinking-opd-scientific-2xa100-v1",
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "local_pdf": "{repo}/rethink.pdf"
+  },
+  "protocols": {
+    "scientific": {
+      "preset": "pilot",
+      "purpose": "Seed-locked, long-horizon scientific reproduction on exactly two A100-80GB GPUs.",
+      "dangerous": true,
+      "overrides": {
+        "N_GPUS": "2",
+        "TRAIN_BATCH_SIZE": "2",
+        "PPO_MINI_BATCH_SIZE": "2",
+        "N_RESPONSES": "1",
+        "TRAIN_MAX_SAMPLES": "-1",
+        "MAX_PROMPT_LENGTH": "1024",
+        "MAX_RESPONSE_LENGTH": "7168",
+        "LEARNING_RATE": "1e-6",
+        "TRAIN_TEMPERATURE": "1.0",
+        "TEACHER_TEMPERATURE": "1.0",
+        "DATA_SHUFFLE": "false",
+        "SAVE_FREQ": "20",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "2",
+        "CHECKPOINT_SAVE_MODE": "full",
+        "RESUME_MODE": "auto",
+        "GPU_TELEMETRY_INTERVAL": "1",
+        "ROLLOUT_GPU_MEMORY_UTILIZATION": "0.40",
+        "ACTOR_OPTIMIZER_OFFLOAD": "false",
+        "ACTOR_PARAMETER_OFFLOAD": "false",
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1"
+      }
+    }
+  },
+  "scientific_spec": {
+    "primary_seed": 42,
+    "runnable_training_cells": 28,
+    "comparability": {
+      "training": "hardware_adapted_2xa100",
+      "evaluation": "paper_evaluation_protocol",
+      "provenance": "local_snapshot_and_seed_locked_data"
+    },
+    "trend_evaluation": {
+      "benchmarks": ["AIME24", "AIME25", "AMC23"],
+      "n": 4,
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "max_tokens": 4096,
+      "thinking": "off",
+      "seed": 42
+    },
+    "exact_evaluation": {
+      "benchmarks": ["AIME24", "AIME25", "AMC23"],
+      "n": 16,
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "max_tokens": 31744,
+      "thinking": "off",
+      "seed": 42
+    },
+    "fixed_evaluation_targets": [
+      {
+        "id": "qwen3-1p7b-base-initial",
+        "model": "Qwen/Qwen3-1.7B-Base",
+        "revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+        "evaluation": "exact",
+        "used_by": ["fig2", "fig8-base", "fig10"]
+      },
+      {
+        "id": "fig3-qwen-grpo-teacher",
+        "model": "lllyx/Qwen3-4B-Base-GRPO",
+        "revision": "1f3b2966edfb75f2f98a00617588c1f748088422",
+        "evaluation": "exact",
+        "used_by": ["fig2", "fig3", "fig10"]
+      },
+      {
+        "id": "fig3-qwen-nonthinking-teacher",
+        "model": "Qwen/Qwen3-4B",
+        "revision": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "evaluation": "exact",
+        "used_by": ["fig2", "fig3", "fig4-qwen", "fig8"]
+      },
+      {
+        "id": "deepseek-r1-distill-1p5b-initial",
+        "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "evaluation": "exact",
+        "used_by": ["fig4", "fig5-teacher", "fig6", "fig7", "fig9", "fig11-16"]
+      },
+      {
+        "id": "justrl-deepseek-1p5b-initial",
+        "model": "hbx/JustRL-DeepSeek-1.5B",
+        "revision": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "evaluation": "exact",
+        "used_by": ["fig4", "fig5-student", "fig6", "fig7", "fig9", "fig11-16"]
+      },
+      {
+        "id": "deepseek-r1-distill-7b-initial",
+        "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        "revision": "916b56a44061fd5cd7d6a8fb632557ed4f724f60",
+        "evaluation": "exact",
+        "used_by": ["fig4", "fig5", "fig6", "fig14"]
+      },
+      {
+        "id": "skywork-or1-math-7b-initial",
+        "model": "Skywork/Skywork-OR1-Math-7B",
+        "revision": "fcef970f1d10682f13c182b280146a194ed57d1e",
+        "evaluation": "exact",
+        "used_by": ["fig4"]
+      },
+      {
+        "id": "qwen3-1p7b-initial",
+        "model": "Qwen/Qwen3-1.7B",
+        "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "evaluation": "exact",
+        "used_by": ["fig4-qwen"]
+      },
+      {
+        "id": "qwen3-1p7b-sft-initial",
+        "model": "lllyx/Qwen3-1.7B-SFT",
+        "revision": "f0065babe7440257d7db331a5aa442ef7c3cf266",
+        "evaluation": "exact",
+        "used_by": ["fig8-sft"]
+      }
+    ],
+    "suite_probes": {
+      "fig11b": {
+        "sample_size": 2000,
+        "seed": 42,
+        "student_n": 1,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "max_tokens": 31744,
+        "strict_response_tokens_gt": 16384,
+        "prefix_tokens": [1024, 4096, 8192, 16384],
+        "minimum_selected": 30
+      },
+      "fig14": {
+        "prompts": 1070,
+        "rollouts_per_prompt": 4,
+        "actions": 4280,
+        "student_temperature": 1.0,
+        "student_top_p": 1.0,
+        "student_max_tokens": 7168,
+        "seed": 42,
+        "bootstrap_resamples": 10000
+      }
+    }
+  },
+  "datasets": {
+    "dapo_scientific_520": {
+      "path": "{repo}/datasets/ablation/dapo-original-520-seed42.parquet",
+      "rows": 520,
+      "sha256": "8e50d989cf7505b7d6c5916600e2d05c7ed7c1330bd69fbba7d39a0a87f05a25",
+      "source_sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "selected_row_ids_sha256": "0cb3055cfe112ee563d78778dfea2aa7da3ee5897f8c2a21946368ee440f13f5",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "dapo_scientific_400": {
+      "path": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+      "rows": 400,
+      "sha256": "0a7c7070efecd8c5808210c881d7a02a4e8cca996956f35d3884447fb5c459ee",
+      "source_sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "selected_row_ids_sha256": "dd59e8fa49db3d5d096ad1be6c5390e933c46c1ba6b63ea4d13b8ce8857694ef",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "dapo_paper_aligned_scientific_400": {
+      "path": "{repo}/datasets/ablation/dapo-paper-aligned-400-seed42.parquet",
+      "rows": 400,
+      "sha256": "efe802c08949129c15731f3c4dbd4fff04cbb2511abbbe8cf8d9812279367ade",
+      "source_sha256": "500bd8c45eca355b98f9ba6f3213194a72bd42c73c5e9569c6fbbb1b51bd0b39",
+      "selected_row_ids_sha256": "dd59e8fa49db3d5d096ad1be6c5390e933c46c1ba6b63ea4d13b8ce8857694ef",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "dapo_scientific_1200": {
+      "path": "{repo}/datasets/ablation/dapo-original-1200-seed42.parquet",
+      "rows": 1200,
+      "sha256": "81fac7a8006e0a5e19c9f0e7a9557c5fed5299627d2a05517fb77c32edb5b0c2",
+      "source_sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "selected_row_ids_sha256": "0cc897de584d79e8c3946bfda2ab67f6673ec0c99adf6e0d3c227cf3e40cd8f6",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "dapo_matched_scientific_400": {
+      "path": "{repo}/datasets/ablation/dapo-matched-deepmath-400-seed42.parquet",
+      "rows": 400,
+      "sha256": "32fb4d774fbfa092332fde33420aa8d11fa41fa1ce13b81cdf56e9969262b2bd",
+      "source_sha256": "5ab8b45b7c24c4254c22ae0afe82e1c00792c41e01e508636ea49a159837cf21",
+      "selected_row_ids_sha256": "efd3dfde13a7e7aede31b4af225e00cfa77a6b14d92af163552577ebec811a07",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "deepmath_scientific_400": {
+      "path": "{repo}/datasets/ablation/deepmath-400-seed42.parquet",
+      "rows": 400,
+      "sha256": "08b920475f47881820e9535635d568df3be21069ac1e89aeb09b76bc2e7ebdcc",
+      "source_sha256": "e79d42456e1f8059167100b8fb5d25fbe48cce978bba185bddfb03b40a2925d4",
+      "selected_row_ids_sha256": "efd3dfde13a7e7aede31b4af225e00cfa77a6b14d92af163552577ebec811a07",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "openthoughts_scientific_400": {
+      "path": "{repo}/datasets/ablation/openthoughts3-opd-400-seed42.parquet",
+      "rows": 400,
+      "sha256": "8e2c99ec781625978da9afa6e00d4f9d6533c84642ab2f9b331198c085405da9",
+      "source_sha256": "20cb0121463dbacf996f858a96f584d714cb939ab31028b8e33e5b5b2010e0ae",
+      "selected_row_ids_sha256": "9df5176e2033a4a089386ce45b7832ddc9e28e13067b8a9ea21e8d94e20a30b3",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    }
+  },
+  "groups": [
+    {
+      "id": "fig2_teacher_pattern",
+      "paper_location": "Figures 2 and 17, physical pages 6 and 23",
+      "fidelity": "paper_exact_public_models_hardware_adapted",
+      "question": "Does a compatible GRPO teacher outperform a non-thinking mismatch?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION", "ENABLE_THINKING"],
+      "constants": {
+        "MODEL_PAIR": "paper",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+        "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200]},
+      "cells": [
+        {"id": "fig2-compatible-grpo", "label": "Qwen3-4B-Base-GRPO teacher", "factors": {"TEACHER_MODEL": "lllyx/Qwen3-4B-Base-GRPO", "TEACHER_REVISION": "1f3b2966edfb75f2f98a00617588c1f748088422", "ENABLE_THINKING": "auto"}},
+        {"id": "fig2-mismatch-nonthinking", "label": "Qwen3-4B non-thinking teacher", "factors": {"TEACHER_MODEL": "Qwen/Qwen3-4B", "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c", "ENABLE_THINKING": "false"}}
+      ]
+    },
+    {
+      "id": "fig4_6_deepseek_teachers",
+      "paper_location": "Figures 4, 6, 14, 18, and 19, physical pages 7, 9, 16, 24, and 25",
+      "fidelity": "paper_public_models_with_author_checkpoint_mirror",
+      "question": "Which DeepSeek-family teacher properties predict successful OPD?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "MIN_FREE_GIB": "75"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200], "probes": ["fig14"]},
+      "cells": [
+        {"id": "fig4-deepseek-skywork-rl", "label": "Skywork-OR1-Math-7B additional-RL teacher", "factors": {"TEACHER_MODEL": "Skywork/Skywork-OR1-Math-7B", "TEACHER_REVISION": "fcef970f1d10682f13c182b280146a194ed57d1e"}},
+        {"id": "fig4-6-deepseek-r1-7b", "label": "R1-Distill-7B same-pipeline teacher", "factors": {"TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", "TEACHER_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60"}},
+        {"id": "fig6-deepseek-justrl-success", "label": "JustRL-DeepSeek-1.5B successful teacher", "factors": {"TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B", "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2"}}
+      ]
+    },
+    {
+      "id": "fig4_qwen_public",
+      "paper_location": "Figure 4, physical page 7",
+      "fidelity": "public_half_of_paper_pair",
+      "question": "Public Qwen non-thinking reference for the unpublished RL-Math comparison.",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "blocked_comparators": ["fig4-qwen-nonthinking-rl-math"],
+      "constants": {
+        "MODEL_PAIR": "mismatch",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B",
+        "STUDENT_REVISION": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "ENABLE_THINKING": "false",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200]},
+      "cells": [
+        {"id": "fig4-qwen-nonthinking", "label": "Qwen3-4B non-thinking public teacher", "factors": {"TEACHER_MODEL": "Qwen/Qwen3-4B", "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c"}}
+      ]
+    },
+    {
+      "id": "fig5_reverse_distillation",
+      "paper_location": "Figure 5, physical page 8",
+      "fidelity": "paper_models_and_600_step_budget_with_author_checkpoint_mirror",
+      "question": "Can the post-RL JustRL model learn from its weaker pre-RL teachers?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "STUDENT_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-1200-seed42.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "MIN_FREE_GIB": "75"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "600", "MILESTONE_STEPS": "100,200,300,400,500,600"}},
+      "scientific": {"expected_final_step": 600, "milestone_steps": [100, 200, 300, 400, 500, 600], "trend_steps": [0, 100, 200, 300, 400, 500, 600], "exact_steps": [600]},
+      "cells": [
+        {"id": "fig5-reverse-r1-1p5b", "label": "JustRL-1.5B to R1-Distill-1.5B", "factors": {"TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", "TEACHER_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562"}},
+        {"id": "fig5-reverse-r1-7b", "label": "JustRL-1.5B to R1-Distill-7B", "factors": {"TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", "TEACHER_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60"}}
+      ]
+    },
+    {
+      "id": "fig7_support",
+      "paper_location": "Figure 7, physical page 10",
+      "fidelity": "paper_models_and_author_code_semantics_hardware_adapted",
+      "question": "Which token support should receive the distillation reward?",
+      "factor_keys": ["TOP_K_STRATEGY"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+        "TOP_K": "16",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200]},
+      "cells": [
+        {"id": "fig7-student-topk", "label": "Student Top-16", "factors": {"TOP_K_STRATEGY": "only_stu"}},
+        {"id": "fig7-overlap-topk", "label": "Overlap Top-16", "factors": {"TOP_K_STRATEGY": "intersection"}},
+        {"id": "fig7-nonoverlap-topk-author", "label": "Non-overlap Top-16", "factors": {"TOP_K_STRATEGY": "union-intersection"}}
+      ]
+    },
+    {
+      "id": "fig8_cold_start",
+      "paper_location": "Figures 8 and 21, physical pages 12 and 28",
+      "fidelity": "released_checkpoint_comparison",
+      "question": "Does cold-start SFT improve subsequent OPD?",
+      "factor_keys": ["STUDENT_MODEL", "STUDENT_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "mismatch",
+        "TEACHER_MODEL": "Qwen/Qwen3-4B",
+        "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "ENABLE_THINKING": "false",
+        "TRAIN_DATA": "{repo}/datasets/ablation/openthoughts3-opd-400-seed42.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200], "upstream_status": "released_upstream_not_retrained"},
+      "cells": [
+        {"id": "fig8-base-only-opd", "label": "Qwen3-1.7B-Base plus OPD", "factors": {"STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base", "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"}},
+        {"id": "fig8-sft-then-opd", "label": "Released Qwen3-1.7B-SFT plus OPD", "factors": {"STUDENT_MODEL": "lllyx/Qwen3-1.7B-SFT", "STUDENT_REVISION": "f0065babe7440257d7db331a5aa442ef7c3cf266"}}
+      ]
+    },
+    {
+      "id": "fig9_prompt_template",
+      "paper_location": "Figures 9 and 22, physical pages 13 and 29",
+      "fidelity": "paper_models_strict_text_reconstruction",
+      "question": "Does aligning the answer template to the teacher help?",
+      "factor_keys": ["TRAIN_DATA"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200]},
+      "cells": [
+        {"id": "fig9-template-original", "label": "Original DAPO template", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet"}},
+        {"id": "fig9-template-paper-aligned", "label": "Paper teacher-aligned template", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-paper-aligned-400-seed42.parquet"}}
+      ]
+    },
+    {
+      "id": "fig10_prompt_content",
+      "paper_location": "Figure 10, physical page 13",
+      "fidelity": "paper_models_with_disclosed_local_matching_seed",
+      "question": "Does prompt content matter at matched sample count?",
+      "factor_keys": ["TRAIN_DATA"],
+      "constants": {
+        "MODEL_PAIR": "paper",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+        "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+        "TEACHER_MODEL": "lllyx/Qwen3-4B-Base-GRPO",
+        "TEACHER_REVISION": "1f3b2966edfb75f2f98a00617588c1f748088422",
+        "ENABLE_THINKING": "auto",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "200", "MILESTONE_STEPS": "40,80,120,160,200"}},
+      "scientific": {"expected_final_step": 200, "milestone_steps": [40, 80, 120, 160, 200], "trend_steps": [0, 40, 80, 120, 160, 200], "exact_steps": [200]},
+      "cells": [
+        {"id": "fig10-content-dapo-matched", "label": "Matched DAPO teacher prompts", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/dapo-matched-deepmath-400-seed42.parquet"}},
+        {"id": "fig10-content-deepmath", "label": "Deduplicated DeepMath", "factors": {"TRAIN_DATA": "{repo}/datasets/ablation/deepmath-400-seed42.parquet"}}
+      ]
+    },
+    {
+      "id": "fig11_13_response_length",
+      "paper_location": "Figures 11(a), 12, 13, and 23, physical pages 14-15 and 30",
+      "fidelity": "paper_models_hardware_adapted_for_long_context",
+      "question": "How does maximum response length change long-horizon OPD?",
+      "factor_keys": ["MAX_RESPONSE_LENGTH"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-520-seed42.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "POSITION_ENTROPY_LOG_FREQ": "10",
+        "POSITION_ENTROPY_START_STEP": "180",
+        "POSITION_ENTROPY_BIN_SIZE": "256"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "260", "MILESTONE_STEPS": "40,80,120,160,200,220,240,260"}},
+      "scientific": {
+        "expected_final_step": 260,
+        "milestone_steps": [40, 80, 120, 160, 200, 220, 240, 260],
+        "trend_steps": [0, 40, 80, 120, 160, 180, 190, 200, 210, 220, 230, 240, 250, 260],
+        "exact_steps": [200],
+        "phase_boundaries": [{"steps": [1, 200], "label": "paper_text_boundary"}, {"steps": [201, 260], "label": "figure_window_reconstruction"}],
+        "position_entropy_main_steps": [180, 190, 200, 210, 220, 230, 240, 250],
+        "position_entropy_supplement_steps": [260],
+        "probes": ["fig11b"]
+      },
+      "cells": [
+        {"id": "fig12-length-512", "label": "0.5K", "factors": {"MAX_RESPONSE_LENGTH": "512"}},
+        {"id": "fig12-length-1024", "label": "1K", "factors": {"MAX_RESPONSE_LENGTH": "1024"}},
+        {"id": "fig12-length-3072", "label": "3K", "factors": {"MAX_RESPONSE_LENGTH": "3072"}},
+        {"id": "fig12-length-7168", "label": "7K", "factors": {"MAX_RESPONSE_LENGTH": "7168"}},
+        {"id": "fig12-length-10240", "label": "10K", "factors": {"MAX_RESPONSE_LENGTH": "10240"}, "scientific": {"exact_steps": [200, 260]}},
+        {"id": "fig12-length-15360", "label": "15K", "factors": {"MAX_RESPONSE_LENGTH": "15360"}, "scientific": {"exact_steps": [200, 260]}}
+      ]
+    },
+    {
+      "id": "fig15_16_topk",
+      "paper_location": "Figures 15 and 16, physical page 17",
+      "fidelity": "paper_models_hardware_adapted",
+      "question": "How many student top-k tokens are required for stable OPD?",
+      "factor_keys": ["TOP_K"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-520-seed42.parquet",
+        "MAX_RESPONSE_LENGTH": "7168",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author"
+      },
+      "protocol_overrides": {"scientific": {"TOTAL_TRAINING_STEPS": "260", "MILESTONE_STEPS": "40,80,120,160,200,220,240,260"}},
+      "scientific": {"expected_final_step": 260, "milestone_steps": [40, 80, 120, 160, 200, 220, 240, 260], "trend_steps": [0, 40, 80, 120, 160, 200, 220, 240, 260], "exact_steps": [200], "paper_text_boundary": 200},
+      "cells": [
+        {"id": "fig16-topk-sampled", "label": "Sampled-token", "factors": {"TOP_K": "0"}},
+        {"id": "fig16-topk-1", "label": "Top-1", "factors": {"TOP_K": "1"}, "scientific": {"exact_steps": [200, 260]}},
+        {"id": "fig16-topk-4", "label": "Top-4", "factors": {"TOP_K": "4"}, "scientific": {"exact_steps": [200, 260]}},
+        {"id": "fig16-topk-16", "label": "Top-16", "factors": {"TOP_K": "16"}, "scientific": {"exact_steps": [200, 260]}},
+        {"id": "fig16-topk-64", "label": "Top-64", "factors": {"TOP_K": "64"}, "scientific": {"exact_steps": [200, 260]}}
+      ]
+    }
+  ],
+  "blocked_cells": [
+    {
+      "cell_id": "fig4-qwen-nonthinking-rl-math",
+      "group_id": "fig4_qwen_public",
+      "paper_location": "Figure 4, physical page 7",
+      "execution_state": "blocked_external",
+      "conclusion_state": "not_assessed",
+      "reason": "The authors did not publish Qwen3-4B-Non-Thinking-RL-Math or an immutable checkpoint identity.",
+      "comparability": {"training": "unavailable", "evaluation": "unavailable", "provenance": "unpublished_checkpoint"}
+    },
+    {
+      "cell_id": "fig20-r1-7b-skywork-7b",
+      "group_id": "fig20_cross_model_large",
+      "paper_location": "Figure 20, physical page 27",
+      "execution_state": "blocked_hardware",
+      "conclusion_state": "not_assessed",
+      "reason": "The disclosed 7B-student setup requires the original 8x80GB hardware scale; no proxy closes this cell.",
+      "comparability": {"training": "requires_8x80gb", "evaluation": "not_started", "provenance": "public_models"}
+    },
+    {
+      "cell_id": "fig20-r1-7b-r1-14b",
+      "group_id": "fig20_cross_model_large",
+      "paper_location": "Figure 20, physical page 27",
+      "execution_state": "blocked_hardware",
+      "conclusion_state": "not_assessed",
+      "reason": "The disclosed 7B-student/14B-teacher setup requires the original 8x80GB hardware scale; no proxy closes this cell.",
+      "comparability": {"training": "requires_8x80gb", "evaluation": "not_started", "provenance": "public_models"}
+    }
+  ]
+}

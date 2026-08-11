@@ -1,0 +1,225 @@
+{
+  "schema_version": 2,
+  "suite_id": "rethinking-opd-scientific-gates-2xa100-v1",
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "local_pdf": "{repo}/rethink.pdf"
+  },
+  "protocols": {
+    "scientific": {
+      "preset": "pilot",
+      "purpose": "Isolated hardware gates. These runs are engineering evidence and are never paper results.",
+      "dangerous": true,
+      "overrides": {
+        "N_GPUS": "2",
+        "TRAIN_BATCH_SIZE": "2",
+        "PPO_MINI_BATCH_SIZE": "2",
+        "N_RESPONSES": "1",
+        "TRAIN_MAX_SAMPLES": "-1",
+        "MAX_PROMPT_LENGTH": "1024",
+        "LEARNING_RATE": "1e-6",
+        "TRAIN_TEMPERATURE": "1.0",
+        "TEACHER_TEMPERATURE": "1.0",
+        "DATA_SHUFFLE": "false",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "2",
+        "CHECKPOINT_SAVE_MODE": "full",
+        "RESUME_MODE": "auto",
+        "GPU_TELEMETRY_INTERVAL": "1",
+        "ROLLOUT_GPU_MEMORY_UTILIZATION": "0.40",
+        "ACTOR_OPTIMIZER_OFFLOAD": "false",
+        "ACTOR_PARAMETER_OFFLOAD": "false",
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1"
+      }
+    }
+  },
+  "scientific_spec": {
+    "primary_seed": 42,
+    "runnable_training_cells": 5,
+    "engineering_gate_only": true,
+    "comparability": {
+      "training": "hardware_gate_only",
+      "evaluation": "not_applicable",
+      "provenance": "local_snapshot_and_seed_locked_data"
+    },
+    "gate_acceptance": {
+      "minimum_free_gib_per_card": 75,
+      "maximum_physical_peak_gib_per_card": 78,
+      "maximum_aborted_ratio": 0.01,
+      "reject_log_patterns": ["CUDA out of memory", "OutOfMemoryError", "NCCL", "nan", "inf"],
+      "fallback_profiles": [
+        {
+          "id": "base",
+          "actor_optimizer_offload": false,
+          "actor_parameter_offload": false,
+          "rollout_gpu_memory_utilization": 0.40
+        },
+        {
+          "id": "optimizer_offload",
+          "actor_optimizer_offload": true,
+          "actor_parameter_offload": false,
+          "rollout_gpu_memory_utilization": 0.30
+        },
+        {
+          "id": "parameter_offload",
+          "actor_optimizer_offload": true,
+          "actor_parameter_offload": true,
+          "rollout_gpu_memory_utilization": 0.30
+        }
+      ]
+    },
+    "trend_evaluation": {
+      "benchmarks": ["AIME24", "AIME25", "AMC23"],
+      "n": 4,
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "max_tokens": 4096,
+      "thinking": "off",
+      "seed": 42
+    },
+    "exact_evaluation": {
+      "benchmarks": ["AIME24", "AIME25", "AMC23"],
+      "n": 16,
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "max_tokens": 31744,
+      "thinking": "off",
+      "seed": 42
+    },
+    "fixed_evaluation_targets": [],
+    "suite_probes": {}
+  },
+  "datasets": {
+    "dapo_scientific_520": {
+      "path": "{repo}/datasets/ablation/dapo-original-520-seed42.parquet",
+      "rows": 520,
+      "sha256": "8e50d989cf7505b7d6c5916600e2d05c7ed7c1330bd69fbba7d39a0a87f05a25",
+      "source_sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "selected_row_ids_sha256": "0cb3055cfe112ee563d78778dfea2aa7da3ee5897f8c2a21946368ee440f13f5",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    },
+    "dapo_scientific_400": {
+      "path": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+      "rows": 400,
+      "sha256": "0a7c7070efecd8c5808210c881d7a02a4e8cca996956f35d3884447fb5c459ee",
+      "source_sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "selected_row_ids_sha256": "dd59e8fa49db3d5d096ad1be6c5390e933c46c1ba6b63ea4d13b8ce8857694ef",
+      "selection_manifest": "{repo}/datasets/ablation/scientific_data_manifest_seed42.json"
+    }
+  },
+  "groups": [
+    {
+      "id": "long_context_gate",
+      "paper_location": "Pre-registered engineering gate for Figures 11-16 and 23",
+      "fidelity": "engineering_gate_only_not_scientific_evidence",
+      "question": "Can the two-A100 base profile safely sustain the highest-risk length and Top-k settings?",
+      "factor_keys": ["MAX_RESPONSE_LENGTH", "TOP_K"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-520-seed42.parquet",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "MIN_FREE_GIB": "75"
+      },
+      "protocol_overrides": {
+        "scientific": {
+          "TOTAL_TRAINING_STEPS": "40",
+          "SAVE_FREQ": "20",
+          "MILESTONE_STEPS": "20,40"
+        }
+      },
+      "scientific": {
+        "expected_final_step": 40,
+        "milestone_steps": [20, 40],
+        "trend_steps": [],
+        "exact_steps": [],
+        "gate_group": "long_context"
+      },
+      "cells": [
+        {
+          "id": "gate-length-15k",
+          "label": "15K response-length gate",
+          "factors": {"MAX_RESPONSE_LENGTH": "15360", "TOP_K": "16"}
+        },
+        {
+          "id": "gate-length-10k",
+          "label": "10K response-length gate",
+          "factors": {"MAX_RESPONSE_LENGTH": "10240", "TOP_K": "16"}
+        },
+        {
+          "id": "gate-topk-64",
+          "label": "Top-64 gate at 7K response length",
+          "factors": {"MAX_RESPONSE_LENGTH": "7168", "TOP_K": "64"}
+        }
+      ]
+    },
+    {
+      "id": "teacher_memory_gate",
+      "paper_location": "Pre-registered engineering gate for the Qwen-4B and R1-7B teacher conditions",
+      "fidelity": "engineering_gate_only_not_scientific_evidence",
+      "question": "Can each core teacher family initialize and train for ten finite steps?",
+      "factor_keys": [
+        "MODEL_PAIR",
+        "STUDENT_MODEL",
+        "STUDENT_REVISION",
+        "TEACHER_MODEL",
+        "TEACHER_REVISION",
+        "ENABLE_THINKING"
+      ],
+      "constants": {
+        "TRAIN_DATA": "{repo}/datasets/ablation/dapo-original-400-seed42.parquet",
+        "MAX_RESPONSE_LENGTH": "7168",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "MIN_FREE_GIB": "75"
+      },
+      "protocol_overrides": {
+        "scientific": {
+          "TOTAL_TRAINING_STEPS": "10",
+          "SAVE_FREQ": "10",
+          "MILESTONE_STEPS": "10"
+        }
+      },
+      "scientific": {
+        "expected_final_step": 10,
+        "milestone_steps": [10],
+        "trend_steps": [],
+        "exact_steps": [],
+        "gate_group": "teacher_memory"
+      },
+      "cells": [
+        {
+          "id": "gate-qwen-4b-teacher",
+          "label": "Qwen3-4B non-thinking teacher gate",
+          "factors": {
+            "MODEL_PAIR": "mismatch",
+            "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+            "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+            "TEACHER_MODEL": "Qwen/Qwen3-4B",
+            "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c",
+            "ENABLE_THINKING": "false"
+          }
+        },
+        {
+          "id": "gate-r1-7b-teacher",
+          "label": "R1-Distill-7B teacher gate",
+          "factors": {
+            "MODEL_PAIR": "r1_failure",
+            "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+            "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+            "TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "TEACHER_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60",
+            "ENABLE_THINKING": "auto"
+          }
+        }
+      ]
+    }
+  ],
+  "blocked_cells": []
+}

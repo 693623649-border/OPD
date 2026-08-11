@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "seed": 42,
+  "method": "numpy.default_rng(seed).choice_without_replacement_then_sort",
+  "source": {
+    "path": "/vepfs-mlp2/queue010/20262202674/OPD/datasets/dapo-math-17k-processed.parquet",
+    "rows": 17917,
+    "sha256": "500bd8c45eca355b98f9ba6f3213194a72bd42c73c5e9569c6fbbb1b51bd0b39"
+  },
+  "deepmath_reference": {
+    "path": "/vepfs-mlp2/queue010/20262202674/OPD/datasets/DeepMath_deduped.parquet",
+    "rows": 14116,
+    "sha256": "e79d42456e1f8059167100b8fb5d25fbe48cce978bba185bddfb03b40a2925d4"
+  },
+  "strict_paper_template": {
+    "path": "/vepfs-mlp2/queue010/20262202674/OPD/datasets/ablation/dapo-math-17k-paper-aligned.parquet",
+    "rows": 17917,
+    "sha256": "4c2cb411d605d95d56df73824e394ca69fc422592d8bb5fd63e82303b530a257",
+    "literal_rewrite": "\\boxed{{}} -> \\boxed{}"
+  },
+  "matched_dapo": {
+    "path": "/vepfs-mlp2/queue010/20262202674/OPD/datasets/ablation/dapo-paper-aligned-matched-deepmath-14116-seed42.parquet",
+    "rows": 14116,
+    "sha256": "5ab8b45b7c24c4254c22ae0afe82e1c00792c41e01e508636ea49a159837cf21",
+    "selected_indices_sha256": "389dc90c4bfc076696fd00fa848aaa514442dfb2948745193be876044e4cbeb6"
+  },
+  "paper_disclosure": "The paper reports matched-size DAPO and deduplicated DeepMath but does not disclose the DAPO row IDs or sampling seed; this deterministic seed-42 subset is a local reconstruction."
+}

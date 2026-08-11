@@ -1,0 +1,385 @@
+{
+  "schema_version": 1,
+  "suite_id": "rethinking-opd-complete-paper-v3",
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "arxiv": "2604.13016v2",
+    "local_pdf": "{repo}/paper/rethinking_opd.pdf"
+  },
+  "entries": [
+    {
+      "id": "figure-01",
+      "paper_location": "Figure 1, physical page 1",
+      "producer": {
+        "type": "composite_summary",
+        "cell_ids": [
+          "fig2-compatible-grpo",
+          "fig2-mismatch-nonthinking",
+          "fig4-deepseek-skywork-rl",
+          "fig4-6-deepseek-r1-7b",
+          "fig4-qwen-nonthinking",
+          "fig4-qwen-nonthinking-rl-math",
+          "fig5-reverse-r1-1p5b",
+          "fig5-reverse-r1-7b",
+          "fig6-deepseek-justrl-success",
+          "fig7-student-topk",
+          "fig7-overlap-topk",
+          "fig7-nonoverlap-topk-author"
+        ],
+        "postprocess": ["paper-authored overview layout"]
+      },
+      "status": "blocked",
+      "fidelity": "paper_summary_requires_all_component_results",
+      "blocker": "Figure 4's Qwen RL-Math teacher checkpoint is not published; the overview cannot be fully regenerated from exact local runs."
+    },
+    {
+      "id": "figure-02",
+      "paper_location": "Figure 2, physical page 6",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig2-compatible-grpo", "fig2-mismatch-nonthinking"],
+        "postprocess": ["three-benchmark unweighted avg@16", "overlap-ratio curve"]
+      },
+      "status": "not_started",
+      "fidelity": "paper_exact_public_models; 2xA100 protocols are hardware-adapted",
+      "blocker": null
+    },
+    {
+      "id": "figure-03",
+      "paper_location": "Figure 3, physical page 6",
+      "producer": {
+        "type": "teacher_evaluation_only",
+        "cell_ids": [],
+        "models": [
+          "lllyx/Qwen3-4B-Base-GRPO@1f3b2966edfb75f2f98a00617588c1f748088422",
+          "Qwen/Qwen3-4B@1cfa9a7208912126459214e8b04321603b3df60c"
+        ],
+        "postprocess": ["AIME 2024 avg@16", "AIME 2025 avg@16", "AMC 2023 avg@16"]
+      },
+      "status": "ready_not_run",
+      "fidelity": "paper_exact_public_models_and_disclosed_sampling",
+      "blocker": null
+    },
+    {
+      "id": "figure-04",
+      "paper_location": "Figure 4, physical page 7",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": [
+          "fig4-deepseek-skywork-rl",
+          "fig4-6-deepseek-r1-7b",
+          "fig4-qwen-nonthinking",
+          "fig4-qwen-nonthinking-rl-math"
+        ],
+        "postprocess": ["three-benchmark unweighted avg@16", "initial overlap", "gap recovery rate"]
+      },
+      "status": "blocked",
+      "fidelity": "DeepSeek pair is public; Qwen RL teacher identity is exact but weights are unavailable",
+      "blocker": "The authors do not publish Qwen3-4B-Non-Thinking-RL-Math or its revision. No third-party proxy is accepted as the paper checkpoint."
+    },
+    {
+      "id": "figure-05",
+      "paper_location": "Figure 5, physical page 8",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig5-reverse-r1-1p5b", "fig5-reverse-r1-7b"],
+        "postprocess": ["600-step per-benchmark avg@16 trajectories"]
+      },
+      "status": "not_started",
+      "fidelity": "paper model conditions and explicit 600-step budget; accessible author mirror for JustRL",
+      "blocker": null
+    },
+    {
+      "id": "figure-06",
+      "paper_location": "Figure 6, physical page 9",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig6-deepseek-justrl-success", "fig4-6-deepseek-r1-7b"],
+        "postprocess": ["per-benchmark avg@16", "overlap ratio", "Eq. 7 overlap-token advantage", "Eq. 8 absolute entropy gap"]
+      },
+      "status": "not_started",
+      "fidelity": "paper conditions with accessible author JustRL mirror",
+      "blocker": null
+    },
+    {
+      "id": "figure-07",
+      "paper_location": "Figure 7, physical page 10",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig7-student-topk", "fig7-overlap-topk", "fig7-nonoverlap-topk-author"],
+        "postprocess": ["per-benchmark avg@16", "overlap ratio", "Eq. 7 advantage"]
+      },
+      "status": "smoke_validated",
+      "fidelity": "paper support semantics and model pair; only two-step local smoke completed",
+      "blocker": "The 200-step/paper-budget training and avg@16 evaluation remain to be run; two-step smoke cannot establish the reported trend."
+    },
+    {
+      "id": "figure-08",
+      "paper_location": "Figure 8, physical page 12",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig8-base-only-opd", "fig8-sft-then-opd"],
+        "postprocess": ["per-benchmark avg@16", "overlap ratio", "Eq. 7 advantage", "Eq. 8 entropy gap"]
+      },
+      "status": "not_started",
+      "fidelity": "released SFT checkpoint comparison; end-to-end SFT producer tracked by Table 3",
+      "blocker": null
+    },
+    {
+      "id": "figure-09",
+      "paper_location": "Figure 9, physical page 13",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig9-template-original", "fig9-template-paper-aligned"],
+        "postprocess": ["three-benchmark unweighted avg@16", "overlap ratio"]
+      },
+      "status": "not_started",
+      "fidelity": "paper models and exact disclosed prompt strings",
+      "blocker": null
+    },
+    {
+      "id": "figure-10",
+      "paper_location": "Figure 10, physical page 13",
+      "producer": {
+        "type": "opd_train_eval_plot",
+        "cell_ids": ["fig10-content-dapo-matched", "fig10-content-deepmath"],
+        "postprocess": ["per-benchmark avg@16", "overlap ratio", "student overlap mass", "student entropy"]
+      },
+      "status": "ready_with_reconstruction",
+      "fidelity": "paper models; deterministic local prompt matching",
+      "blocker": "The paper omits the matched DAPO row IDs and sampling seed, so exact data-row identity cannot be recovered."
+    },
+    {
+      "id": "figure-11",
+      "paper_location": "Figure 11(a-b), physical page 14",
+      "producer": {
+        "type": "mixed_train_eval_and_continuation_probe",
+        "cell_ids": [
+          "fig12-length-512",
+          "fig12-length-1024",
+          "fig12-length-3072",
+          "fig12-length-7168",
+          "fig12-length-10240",
+          "fig12-length-15360"
+        ],
+        "postprocess": [
+          "Figure 11(a): per-length benchmark avg@16",
+          "Figure 11(b): probe_teacher_continuation.py selects strict over-16K rollouts from exactly 2K prompts, builds paired 1K/4K/8K/16K continuation jobs, validates results, and writes JSON/CSV/PNG"
+        ]
+      },
+      "status": "training_partial_probe_implemented_not_run",
+      "fidelity": "Figure 11(a) paper conditions with local long-context adaptation; Figure 11(b) enforces every disclosed structural invariant and labels locally chosen sampling provenance",
+      "blocker": "Only the 15K two-step training cell has run. The Figure 11(b) probe has not been run on its exact 2K-prompt workload, and the paper does not disclose the source checkpoint, prompt seed, generation seed, temperature, top-p, or exact continuation sampling settings."
+    },
+    {
+      "id": "figure-12",
+      "paper_location": "Figure 12, physical page 15",
+      "producer": {
+        "type": "opd_training_dynamics_plot",
+        "cell_ids": [
+          "fig12-length-512",
+          "fig12-length-1024",
+          "fig12-length-3072",
+          "fig12-length-7168",
+          "fig12-length-10240",
+          "fig12-length-15360"
+        ],
+        "postprocess": ["overlap ratio", "student entropy", "gradient norm"]
+      },
+      "status": "partially_smoke_validated",
+      "fidelity": "paper model and length levels; current 2xA100 protocol changes batch and rollout count",
+      "blocker": "Only the 15K two-step path has run. Full curves require all six 200-step cells."
+    },
+    {
+      "id": "figure-13",
+      "paper_location": "Figure 13, physical page 15",
+      "producer": {
+        "type": "position_entropy_heatmap",
+        "cell_ids": ["fig12-length-15360"],
+        "postprocess": [
+          "text-aligned branch: schema-v1 student entropy in 256-token bins at steps 180/190/200",
+          "figure-window reconstruction branch: preserve the step-200 boundary and render the undisclosed 210-260 extension separately"
+        ],
+        "evidence_branches": {
+          "text_condition": "TOTAL_TRAINING_STEPS=200; steps 180/190/200",
+          "figure_window_reconstruction": "TOTAL_TRAINING_STEPS=260; steps 210-260 are explicitly reconstructed rather than paper-disclosed"
+        }
+      },
+      "status": "smoke_validated_only",
+      "fidelity": "schema-v1 binned positional entropy is implemented; two-step heatmap is not the paper trend",
+      "blocker": "The paper text says 200 steps while Figures 12-13 extend to approximately 250-260; both the 200-step boundary and later diagnostic checkpoints must be reported separately."
+    },
+    {
+      "id": "figure-14",
+      "paper_location": "Figure 14, physical page 16",
+      "producer": {
+        "type": "rollout_reward_auroc_analysis",
+        "cell_ids": ["fig6-deepseek-justrl-success", "fig4-6-deepseek-r1-7b"],
+        "postprocess": ["analyze_sequence_reward.py immutable-action scoring", "sampled-token sequence-mean reward", "correct/incorrect split", "tie-safe AUROC", "JSON/CSV/PNG"]
+      },
+      "status": "probe_implemented_not_run",
+      "fidelity": "paper reward equation and paired-action invariants implemented; scientific workload not executed",
+      "blocker": "The analyzer and pinned-model scorer are implemented, but the exact immutable rollout batch and both model log-prob files have not been produced. The paper does not disclose the rollout checkpoint/seed needed for bitwise identity with its 2,828 correct and 1,451 incorrect examples."
+    },
+    {
+      "id": "figure-15",
+      "paper_location": "Figure 15, physical page 17",
+      "producer": {
+        "type": "opd_train_eval_bar_plot",
+        "cell_ids": ["fig16-topk-sampled", "fig16-topk-1", "fig16-topk-4", "fig16-topk-16", "fig16-topk-64"],
+        "postprocess": ["AIME 2024 avg@16", "AIME 2025 avg@16", "AMC 2023 avg@16"]
+      },
+      "status": "not_started",
+      "fidelity": "paper model pair and all five support levels",
+      "blocker": null
+    },
+    {
+      "id": "figure-16",
+      "paper_location": "Figure 16, physical page 17",
+      "producer": {
+        "type": "opd_training_dynamics_plot",
+        "cell_ids": ["fig16-topk-1", "fig16-topk-4", "fig16-topk-16", "fig16-topk-64"],
+        "postprocess": ["overlap ratio", "student entropy", "gradient norm"]
+      },
+      "status": "not_started",
+      "fidelity": "paper model pair and the four Top-k levels shown in Figure 16; sampled-token belongs only to Figure 15",
+      "blocker": null
+    },
+    {
+      "id": "figure-17",
+      "paper_location": "Figure 17, physical page 23",
+      "producer": {
+        "type": "benchmark_breakdown_reuse",
+        "cell_ids": ["fig2-compatible-grpo", "fig2-mismatch-nonthinking"],
+        "postprocess": ["AIME 2024 avg@16", "AIME 2025 avg@16", "AMC 2023 avg@16"]
+      },
+      "status": "not_started",
+      "fidelity": "exact reuse of Figure 2 checkpoints and evaluation protocol",
+      "blocker": null
+    },
+    {
+      "id": "figure-18",
+      "paper_location": "Figure 18, physical page 24",
+      "producer": {
+        "type": "metric_plot_reuse",
+        "cell_ids": ["fig6-deepseek-justrl-success", "fig4-6-deepseek-r1-7b"],
+        "postprocess": ["student overlap probability mass", "teacher overlap probability mass"]
+      },
+      "status": "ready_not_run",
+      "fidelity": "exact reuse of Figure 6 training; both mass metrics are implemented",
+      "blocker": null
+    },
+    {
+      "id": "figure-19",
+      "paper_location": "Figure 19, physical page 25",
+      "producer": {
+        "type": "optimization_diagnostics_reuse",
+        "cell_ids": ["fig6-deepseek-justrl-success", "fig4-6-deepseek-r1-7b"],
+        "postprocess": ["policy-gradient loss", "gradient norm", "largest-absolute-advantage token probability difference"]
+      },
+      "status": "ready_not_run",
+      "fidelity": "exact Figure 6 run reuse; all three diagnostics are implemented, including schema-v1 signed probability difference at the largest-absolute-advantage token",
+      "blocker": null
+    },
+    {
+      "id": "figure-20",
+      "paper_location": "Figure 20, physical page 27",
+      "producer": {
+        "type": "opd_train_eval_plot_original_scale",
+        "cell_ids": ["fig20-r1-7b-skywork-7b", "fig20-r1-7b-r1-14b"],
+        "postprocess": ["per-benchmark avg@16", "overlap ratio", "Eq. 7 advantage", "Eq. 8 entropy gap"]
+      },
+      "status": "blocked_on_local_hardware",
+      "fidelity": "exact public 7B student and 7B/14B teacher revisions",
+      "blocker": "The exact group is restricted to the paper protocol with 8 visible 80GB GPUs. The current 2xA100 host is not authorized as an exact Figure 20 execution target."
+    },
+    {
+      "id": "figure-21",
+      "paper_location": "Figure 21, physical page 28",
+      "producer": {
+        "type": "metric_plot_reuse",
+        "cell_ids": ["fig8-base-only-opd", "fig8-sft-then-opd"],
+        "postprocess": ["student overlap probability mass", "teacher overlap probability mass"]
+      },
+      "status": "ready_not_run",
+      "fidelity": "exact reuse of Figure 8 OPD runs with released SFT checkpoint",
+      "blocker": null
+    },
+    {
+      "id": "figure-22",
+      "paper_location": "Figure 22, physical page 29",
+      "producer": {
+        "type": "benchmark_breakdown_reuse",
+        "cell_ids": ["fig9-template-original", "fig9-template-paper-aligned"],
+        "postprocess": ["AIME 2024 avg@16", "AIME 2025 avg@16", "AMC 2023 avg@16"]
+      },
+      "status": "not_started",
+      "fidelity": "exact reuse of Figure 9 checkpoints and evaluation protocol",
+      "blocker": null
+    },
+    {
+      "id": "figure-23",
+      "paper_location": "Figure 23, physical page 30",
+      "producer": {
+        "type": "position_entropy_heatmap_reuse",
+        "cell_ids": ["fig12-length-15360"],
+        "postprocess": [
+          "text-aligned branch: schema-v1 teacher entropy in 256-token bins at steps 180/190/200",
+          "figure-window reconstruction branch: preserve the step-200 boundary and render the undisclosed 210-260 extension separately"
+        ],
+        "evidence_branches": {
+          "text_condition": "TOTAL_TRAINING_STEPS=200; steps 180/190/200",
+          "figure_window_reconstruction": "TOTAL_TRAINING_STEPS=260; steps 210-260 are explicitly reconstructed rather than paper-disclosed"
+        }
+      },
+      "status": "smoke_validated_only",
+      "fidelity": "schema-v1 teacher positional entropy is implemented; two-step heatmap is not the paper trend",
+      "blocker": "A full long-horizon run remains outstanding. The paper text ends at 200 steps while the plotted late window reaches roughly 250-260, so the text-aligned branch and reconstructed extension must remain separately labeled."
+    },
+    {
+      "id": "table-01",
+      "paper_location": "Table 1, physical page 23",
+      "producer": {
+        "type": "grpo_teacher_pretraining",
+        "cell_ids": [],
+        "models": [
+          "Qwen/Qwen3-4B-Base@906bfd4b4dc7f14ee4320094d8b41684abff8539",
+          "lllyx/Qwen3-4B-Base-GRPO@1f3b2966edfb75f2f98a00617588c1f748088422"
+        ],
+        "postprocess": ["one-epoch GRPO on processed DAPO-Math-17K with rollout n=8"]
+      },
+      "status": "released_checkpoint_available",
+      "fidelity": "paper hyperparameters and released final checkpoint; fresh GRPO producer is outside the OPD matrix",
+      "blocker": "Exact end-to-end regeneration requires 8xA800 80GB and the paper does not disclose optimizer betas, weight decay, seed, or checkpoint selection details."
+    },
+    {
+      "id": "table-02",
+      "paper_location": "Table 2, physical page 24",
+      "producer": {
+        "type": "registry_protocol",
+        "cell_ids": [],
+        "postprocess": ["paper protocol in paper_full_matrix.json"]
+      },
+      "status": "implemented",
+      "fidelity": "all disclosed OPD defaults encoded; group-specific disclosed overrides retained",
+      "blocker": "Optimizer betas, weight decay, gradient clipping, precision details, seeds, and checkpoint-selection rules are not disclosed by the paper."
+    },
+    {
+      "id": "table-03",
+      "paper_location": "Table 3, physical page 28",
+      "producer": {
+        "type": "offline_rollout_and_full_parameter_sft",
+        "cell_ids": [],
+        "models": [
+          "Qwen/Qwen3-1.7B-Base@ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+          "Qwen/Qwen3-4B@1cfa9a7208912126459214e8b04321603b3df60c",
+          "lllyx/Qwen3-1.7B-SFT@f0065babe7440257d7db331a5aa442ef7c3cf266"
+        ],
+        "postprocess": ["200K teacher rollouts", "filter incomplete/repetitive outputs", "one-epoch BF16 full-parameter SFT"]
+      },
+      "status": "released_checkpoint_available",
+      "fidelity": "paper Table 3 and released SFT checkpoint; fresh data/filtering identity is not exact",
+      "blocker": "The exact sampled prompt IDs, generation retry/filter implementation, retained row IDs, random seed, and the discrepancy between paper/model-card/repository SFT settings prevent bitwise end-to-end regeneration."
+    }
+  ]
+}

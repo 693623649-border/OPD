@@ -1,0 +1,331 @@
+{
+  "schema_version": 1,
+  "suite_id": "rethinking-opd-lite-2xa100-v1",
+  "paper": {
+    "title": "Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe",
+    "arxiv": "2604.13016v2",
+    "local_pdf": "{repo}/paper/rethinking_opd.pdf",
+    "source_matrix": "{repo}/reproduce_4b/paper_full_matrix.json",
+    "source_matrix_sha256": "a45bc9aff21bc6c12a687660cd5d5953ce022f924f9c5fec7855f23c59818225",
+    "scope": "A deliberately non-paper-comparable 2xA100-80GB reproduction: seven default core cells and seven optional extended cells preserve the paper's main paired causal comparisons while reducing steps, rollout multiplicity, response length, checkpoint retention, and evaluation sampling."
+  },
+  "protocols": {
+    "smoke": {
+      "preset": "smoke",
+      "purpose": "Two-step shape and branch validation only; never scientific evidence.",
+      "overrides": {
+        "SAVE_FREQ": "-1",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1",
+        "CHECKPOINT_SAVE_MODE": "model_only"
+      }
+    },
+    "calibration": {
+      "preset": "pilot",
+      "purpose": "Ten-step memory, throughput, and finite-metric calibration on exclusive 2xA100-80GB.",
+      "overrides": {
+        "TRAIN_BATCH_SIZE": "4",
+        "PPO_MINI_BATCH_SIZE": "4",
+        "N_RESPONSES": "1",
+        "MAX_RESPONSE_LENGTH": "2048",
+        "TRAIN_MAX_SAMPLES": "40",
+        "TOTAL_TRAINING_STEPS": "10",
+        "SAVE_FREQ": "-1",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1",
+        "CHECKPOINT_SAVE_MODE": "model_only"
+      }
+    },
+    "pilot": {
+      "preset": "pilot",
+      "purpose": "Forty-step lightweight trend run; final model-only checkpoint; explicitly not paper-comparable.",
+      "overrides": {
+        "TRAIN_BATCH_SIZE": "4",
+        "PPO_MINI_BATCH_SIZE": "4",
+        "N_RESPONSES": "1",
+        "MAX_RESPONSE_LENGTH": "2048",
+        "TRAIN_MAX_SAMPLES": "160",
+        "TOTAL_TRAINING_STEPS": "40",
+        "SAVE_FREQ": "40",
+        "MAX_ACTOR_CKPTS_TO_KEEP": "1",
+        "CHECKPOINT_SAVE_MODE": "model_only"
+      }
+    }
+  },
+  "datasets": {
+    "dapo_original": {
+      "path": "{repo}/datasets/dapo-math-17k.parquet",
+      "rows": 17917,
+      "sha256": "039f3afd689c846985bd2bf58e55a2210a8b08a1a9e1f60dbc07107a5f341925",
+      "template": "original_dapo"
+    },
+    "openthoughts3_opd": {
+      "path": "{repo}/datasets/OpenThoughts3_opd.parquet",
+      "rows": 30000,
+      "sha256": "20cb0121463dbacf996f858a96f584d714cb939ab31028b8e33e5b5b2010e0ae",
+      "template": "paper_literal_boxed_single_braces"
+    }
+  },
+  "groups": [
+    {
+      "id": "fig2_teacher_pattern",
+      "paper_location": "Figure 2 and Figure 17, physical pages 6 and 23",
+      "fidelity": "lite_hardware_adapted_not_paper_comparable",
+      "question": "Does the paper's Qwen teacher condition produce a different early OPD trend?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION", "ENABLE_THINKING"],
+      "constants": {
+        "MODEL_PAIR": "paper",
+        "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+        "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "2",
+        "MIN_FREE_GIB": "70"
+      },
+      "cells": [
+        {
+          "id": "fig2-compatible-grpo",
+          "label": "Lite: Qwen3-4B-Base-GRPO compatible teacher",
+          "factors": {
+            "TEACHER_MODEL": "lllyx/Qwen3-4B-Base-GRPO",
+            "TEACHER_REVISION": "1f3b2966edfb75f2f98a00617588c1f748088422",
+            "ENABLE_THINKING": "auto"
+          }
+        },
+        {
+          "id": "fig2-mismatch-nonthinking",
+          "label": "Lite: Qwen3-4B Non-thinking mismatched teacher",
+          "factors": {
+            "TEACHER_MODEL": "Qwen/Qwen3-4B",
+            "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c",
+            "ENABLE_THINKING": "false"
+          }
+        }
+      ],
+      "disclosure": "ENABLE_THINKING remains part of the paper's compound teacher condition; this is not an isolated prompt-template intervention."
+    },
+    {
+      "id": "fig4_6_deepseek_teachers",
+      "paper_location": "Figures 4, 6, 18, and 19, physical pages 7, 9, 24, and 25",
+      "fidelity": "lite_hardware_adapted_not_paper_comparable",
+      "disabled_by_default": true,
+      "question": "Do the paper's successful and failing DeepSeek-family teachers separate within forty steps?",
+      "factor_keys": ["TEACHER_MODEL", "TEACHER_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "2",
+        "MIN_FREE_GIB": "72"
+      },
+      "cells": [
+        {
+          "id": "fig4-6-deepseek-r1-7b",
+          "label": "Lite: R1-Distill-7B failing teacher",
+          "factors": {
+            "TEACHER_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "TEACHER_REVISION": "916b56a44061fd5cd7d6a8fb632557ed4f724f60"
+          }
+        },
+        {
+          "id": "fig6-deepseek-justrl-success",
+          "label": "Lite: JustRL-DeepSeek-1.5B successful teacher",
+          "factors": {
+            "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+            "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2"
+          }
+        }
+      ],
+      "disclosure": "The hbx checkpoint is an accessible mirror; byte identity with the gated thunlp revision is not independently verified. The 7B teacher makes this an extended, higher-risk pair."
+    },
+    {
+      "id": "fig7_support",
+      "paper_location": "Figure 7, physical page 10",
+      "fidelity": "lite_hardware_adapted_not_paper_comparable",
+      "question": "Which Top-16 token support carries the early OPD signal?",
+      "factor_keys": ["TOP_K_STRATEGY"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "2",
+        "MIN_FREE_GIB": "70"
+      },
+      "cells": [
+        {
+          "id": "fig7-student-topk",
+          "label": "Lite: Student Top-16",
+          "factors": {"TOP_K_STRATEGY": "only_stu"}
+        },
+        {
+          "id": "fig7-overlap-topk",
+          "label": "Lite: Overlap Top-16",
+          "factors": {"TOP_K_STRATEGY": "intersection"}
+        },
+        {
+          "id": "fig7-nonoverlap-topk-author",
+          "label": "Lite: Non-overlap Top-16, author raw mass",
+          "factors": {"TOP_K_STRATEGY": "union-intersection"}
+        }
+      ]
+    },
+    {
+      "id": "fig8_cold_start",
+      "paper_location": "Figures 8 and 21, physical pages 12 and 28",
+      "fidelity": "lite_released_checkpoint_comparison_not_paper_comparable",
+      "disabled_by_default": true,
+      "question": "Does the released SFT cold start improve the early failing-OPD trajectory?",
+      "factor_keys": ["STUDENT_MODEL", "STUDENT_REVISION"],
+      "constants": {
+        "MODEL_PAIR": "mismatch",
+        "TEACHER_MODEL": "Qwen/Qwen3-4B",
+        "TEACHER_REVISION": "1cfa9a7208912126459214e8b04321603b3df60c",
+        "ENABLE_THINKING": "false",
+        "TRAIN_DATA": "{repo}/datasets/OpenThoughts3_opd.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "2",
+        "MIN_FREE_GIB": "70"
+      },
+      "cells": [
+        {
+          "id": "fig8-base-only-opd",
+          "label": "Lite: Qwen3-1.7B-Base plus OPD",
+          "factors": {
+            "STUDENT_MODEL": "Qwen/Qwen3-1.7B-Base",
+            "STUDENT_REVISION": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+          }
+        },
+        {
+          "id": "fig8-sft-then-opd",
+          "label": "Lite: released Qwen3-1.7B-SFT plus OPD",
+          "factors": {
+            "STUDENT_MODEL": "lllyx/Qwen3-1.7B-SFT",
+            "STUDENT_REVISION": "f0065babe7440257d7db331a5aa442ef7c3cf266"
+          }
+        }
+      ],
+      "disclosure": "This pair uses the released SFT checkpoint; it does not rerun the paper's 200K-response Table 3 producer."
+    },
+    {
+      "id": "fig11_13_response_length",
+      "paper_location": "Figures 11(a), 12, 13, and 23, physical pages 14-15 and 30",
+      "fidelity": "lite_three_point_length_sweep_not_paper_comparable",
+      "disabled_by_default": true,
+      "question": "How do short, medium, and paper-default response horizons change early OPD stability?",
+      "factor_keys": ["MAX_RESPONSE_LENGTH"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K": "16",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "2",
+        "MIN_FREE_GIB": "70"
+      },
+      "protocol_overrides": {
+        "smoke": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "4",
+          "TOTAL_TRAINING_STEPS": "2",
+          "POSITION_ENTROPY_LOG_FREQ": "1",
+          "POSITION_ENTROPY_START_STEP": "0",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "calibration": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "20",
+          "TOTAL_TRAINING_STEPS": "10",
+          "POSITION_ENTROPY_LOG_FREQ": "2",
+          "POSITION_ENTROPY_START_STEP": "0",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        },
+        "pilot": {
+          "TRAIN_BATCH_SIZE": "2",
+          "PPO_MINI_BATCH_SIZE": "2",
+          "N_RESPONSES": "1",
+          "TRAIN_MAX_SAMPLES": "80",
+          "TOTAL_TRAINING_STEPS": "40",
+          "SAVE_FREQ": "40",
+          "MAX_ACTOR_CKPTS_TO_KEEP": "1",
+          "CHECKPOINT_SAVE_MODE": "model_only",
+          "POSITION_ENTROPY_LOG_FREQ": "5",
+          "POSITION_ENTROPY_START_STEP": "20",
+          "POSITION_ENTROPY_BIN_SIZE": "256"
+        }
+      },
+      "cells": [
+        {
+          "id": "fig12-length-1024",
+          "label": "Lite length: 1K",
+          "factors": {"MAX_RESPONSE_LENGTH": "1024"}
+        },
+        {
+          "id": "fig12-length-3072",
+          "label": "Lite length: 3K",
+          "factors": {"MAX_RESPONSE_LENGTH": "3072"}
+        },
+        {
+          "id": "fig12-length-7168",
+          "label": "Lite length: 7K",
+          "factors": {"MAX_RESPONSE_LENGTH": "7168"}
+        }
+      ],
+      "disclosure": "The 10K/15K cells and 200/260-step late propagation are deliberately excluded because they are not lightweight on this host."
+    },
+    {
+      "id": "fig15_16_topk",
+      "paper_location": "Figures 15 and 16, physical page 17",
+      "fidelity": "lite_two_point_topk_sweep_not_paper_comparable",
+      "question": "Does Student Top-16 improve early stability relative to sampled-token OPD?",
+      "factor_keys": ["TOP_K"],
+      "constants": {
+        "MODEL_PAIR": "r1_success",
+        "STUDENT_MODEL": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+        "STUDENT_REVISION": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+        "TEACHER_MODEL": "hbx/JustRL-DeepSeek-1.5B",
+        "TEACHER_REVISION": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+        "ENABLE_THINKING": "auto",
+        "TRAIN_DATA": "{repo}/datasets/dapo-math-17k.parquet",
+        "TOP_K_STRATEGY": "only_stu",
+        "SUPPORT_WEIGHT_NORMALIZATION": "author",
+        "N_GPUS": "2",
+        "MIN_FREE_GIB": "70"
+      },
+      "cells": [
+        {
+          "id": "fig16-topk-sampled",
+          "label": "Lite: sampled-token OPD",
+          "factors": {"TOP_K": "0"}
+        },
+        {
+          "id": "fig16-topk-16",
+          "label": "Lite: Student Top-16 OPD",
+          "factors": {"TOP_K": "16"}
+        }
+      ],
+      "disclosure": "Top-1/4/64 are omitted; this pair tests only sampled-token versus the paper's default Top-16."
+    }
+  ]
+}
